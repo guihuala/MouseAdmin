@@ -1,0 +1,53 @@
+<template>
+    <div class="p-4">
+        <div class="form-control flex flex-row gap-4">
+            <select class="select input-bordered" v-model="searchField">
+                <option value="id">订单号</option>
+            </select>
+            <label class="input input-bordered flex items-center gap-2">
+                <input type="text" class="grow" placeholder="按下回车搜索" v-model="search" @keyup.enter="performSearch" />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 opacity-70">
+                    <path fill-rule="evenodd"
+                        d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                        clip-rule="evenodd" />
+                </svg>
+            </label>
+        </div>
+    </div>
+</template>
+
+<script setup>
+import { ref, defineEmits } from 'vue';
+import { useStore } from 'vuex';
+
+const store = useStore();
+
+const searchField = ref('id'); // 搜索字段
+const search = ref(''); // 搜索框的值
+const searchResults = ref([]); // 搜索结果
+const emit = defineEmits(['search-results']); // 定义事件
+
+// 根据不同字段搜索员工
+const searchOrder = async (field, value) => {
+    if (!value) {
+        emit('search-results', null);
+        return;
+    }
+    // 根据字段调度不同的 Vuex action
+    switch (field) {
+        case 'id':
+            await store.dispatch('findOrderByNumber', value);
+            searchResults.value = store.state.orders.foundOrder;
+            break;
+        // 添加更多字段的搜索逻辑
+        default:
+            searchResults.value = null;
+    }
+
+    emit('search-results', searchResults.value); // 触发事件
+};
+
+const performSearch = () => {
+    searchOrder(searchField.value, search.value);
+}
+</script>
